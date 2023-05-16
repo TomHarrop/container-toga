@@ -10,7 +10,7 @@ Run the "[final test](https://github.com/hillerlab/TOGA#final-test)"
 ```bash
 singularity exec \
     --writable-tmpfs \
-    toga.sif \
+    docker://ghcr.io/tomharrop/container-toga:v1.1.2 \
         toga.py \
         --cb 3,5 \
         --cjn 500 \
@@ -54,7 +54,7 @@ These can be generated with `make_chains.py` in this container.
 ```bash
 singularity exec \
     --writable-tmpfs \
-    toga_chains.sif \
+    docker://ghcr.io/tomharrop/container-toga:v1.1.2 \
         make_chains.py \
         --project_dir chains_output \
         hg38 mm10 \
