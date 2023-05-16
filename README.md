@@ -38,7 +38,7 @@ Contact the TOGA authors for support.
 
 For example, the machine I tested on has 8 cores and 32 GB RAM, so I used the following config:
 
-```json
+```java
 process {
     executor = 'local'
     cpus = 7
