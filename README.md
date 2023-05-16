@@ -1,30 +1,63 @@
+## `container-toga`
 
-This is based on [@vsoch's](https://github.com/sponsors/vsoch) amazingly useful [singularity-deploy](https://github.com/singularityhub/singularity-deploy) template.
+- [hillerlab/TOGA](https://github.com/hillerlab/TOGA/releases/tag/v1.1.2) v1.1.2
+- [hillerlab/make-lastz-chains \@ commit ee21f17](https://github.com/hillerlab/make_lastz_chains/commit/ee21f172fa7f473b7b7f5b8872daaee4746b07f0) (no tagged releases).
 
-Instead of building the `SIF` directly, my version uses a Dockerfile with the [Docker build-push action](https://github.com/marketplace/actions/build-and-push-docker-images) to upload a Docker image to the [GitHub container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry). It then converts the Docker image to `SIF` and stores that in a release as in the original [singularity-deploy](https://github.com/singularityhub/singularity-deploy) template.
+## Notes for running
 
-Is this useful? I don't know, but I like having the Docker image stored in the registry AND a reproducible container in the assets.
+Run the "[final test](https://github.com/hillerlab/TOGA#final-test)"
 
-Right now you can only have one Dockerfile per repo, until I work out how to use the `build-push` action to build multiple containers. 
+```bash
+singularity exec \
+    --writable-tmpfs \
+    docker://ghcr.io/tomharrop/container-toga:v1.1.2 \
+        toga.py \
+        --cb 3,5 \
+        --cjn 500 \
+        --kt \
+        --ms \
+        --nc nextflow_config_files \
+        --nextflow_dir workdir \
+        --pn test \
+        --project_dir output \
+        --u12 /toga/supply/hg38.U12sites.tsv \
+        -i /toga/supply/hg38.wgEncodeGencodeCompV34.isoforms.txt \
+        /toga/test_input/hg38.mm10.chr11.chain \
+        /toga/test_input/hg38.genCode27.chr11.bed \
+        test_input/hg38.2bit \
+        test_input/mm10.2bit
+```
 
-The steps are pretty similar to @vsoch's [orignal repo](https://github.com/singularityhub/singularity-deploy):
+### Config files
 
-1. Template or fork.
-2. Edit the repo:
-    - Check out a new branch
-    - Modify the **`Docker`** recipe (`Dockerfile`)
-    - Update the Version file
-    - Push the new branch to GitHub
-3. Open a PR for the new branch. This triggers the **test** build, which just builds the Docker image but doesn't push it.
-4. Once the check passes, merge the PR. This creates a release, re-builds the Docker image, uploads it to GHCR, converts it to `SIF`, and adds the `SIF` to the release.
+nextflow_config_files are required by TOGA.
+The config files shipped with TOGA require SLURM.
+Example files are provided in this repo for testing locally.
+You will have to write a config file specific to the machine you are running TOGA on.
+Contact the TOGA authors for support.
 
-### Notes
+For example, the machine I tested on has 8 cores and 32 GB RAM, so I used the following config:
 
-To get the repo to work with GHCR:
+```java
+process {
+    executor = 'local'
+    cpus = 7
+    memory = '28 GB'
+}
+```
 
-- [Enable GHCR for your account](https://docs.github.com/en/packages/working-with-a-github-packages-registry/enabling-improved-container-support-with-the-container-registry).
-- Use the following URL to create a Personal Access Token with the scopes `read:packages`, `write:packages` and `delete:packages`. [https://github.com/settings/tokens/new?scopes=write:packages](https://github.com/settings/tokens/new?scopes=write:packages).  
-This is documented [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry).
-- Add the PAT to the Repository Secrets and call it `CR_PAT` (Settings -> Secrets -> New Repository Secret)
+## Make-lastz-chains
 
-These steps allow the actions runner to authenticate with GHCR and push/pull the images.
+TOGA [needs chain files](https://github.com/hillerlab/TOGA#genome-alignment) for input.
+These can be generated with `make_chains.py` in this container.
+
+```bash
+singularity exec \
+    --writable-tmpfs \
+    docker://ghcr.io/tomharrop/container-toga:v1.1.2 \
+        make_chains.py \
+        --project_dir chains_output \
+        hg38 mm10 \
+        test_input/hg38.2bit \
+        test_input/mm10.2bit
+```
